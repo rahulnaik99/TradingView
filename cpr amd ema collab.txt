@@ -1,0 +1,20 @@
+
+//Plotting
+plot(dp and pivot ? pivot : na, title="Pivot", color=pivot != pivot[1] ? na : color.red ,transp=0 ,style= plot.style_circles ,linewidth=2)
+p1=plot(dp and bc ? bc : na, title="BC", color=bc != bc[1] ? na : color.aqua, transp=0 ,style= plot.style_circles , linewidth=2)
+p2=plot(dp and tc ? tc : na, title="TC", color=tc != tc[1] ? na : color.aqua, transp=0 ,style= plot.style_circles , linewidth=2)
+fill(p1,p2,color= #C0C0C0)
+plot(srp and r1 ? r1 : na, title="R1", color=r1 != r1[1] ? na : color.red, transp=0 ,style= plot.style_circles , linewidth=2)
+plot(srp and r2 ? r2 : na, title="R2", color=r2 != r2[1] ? na : color.red, transp=0 ,style= plot.style_circles , linewidth=2)
+plot(srp and r3 ? r3 : na, title="R3", color=r3 != r3[1] ? na : color.red, transp=0 ,style= plot.style_circles , linewidth=2)
+plot(srp and r4 ? r4 : na, title="R4", color=r4 != r4[1] ? na : color.red, transp=0 ,style= plot.style_circles , linewidth=2)
+plot(srp and s1 ? s1 : na, title="S1", color=s1 != s1[1] ? na : color.green, transp=0 ,style= plot.style_circles , linewidth=2)
+plot(srp and s2 ? s2 : na, title="S2", color=s2 != s2[1] ? na : color.green, transp=0 ,style= plot.style_circles , linewidth=2)
+plot(srp and s3 ? s3 : na, title="S3", color=s3 != s3[1] ? na : color.green, transp=0 ,style= plot.style_circles , linewidth=2)
+plot(srp and s4 ? s4 : na, title="S4", color=s4 != s4[1] ? na : color.green, transp=0 ,style= plot.style_circles , linewidth=2)
+plot(dl and dhigh ? dhigh : na, title="Previous Day High", style=plot.style_circles,linewidth=2, color= dhigh != dhigh[1] ? na : color.black, transp=0)
+plot(dl and dlow ? dlow : na, title="Previous Day Low", style=plot.style_circles,linewidth=2, color= dlow != dlow[1] ? na : color.black, transp=0)
+plot(wl and whigh ? whigh : na, title="Previous Week High", style=plot.style_circles, color= whigh != whigh[1] ? na : color.purple, linewidth=2, transp=0)
+plot(wl and wlow ? wlow : na, title="Previous Week Low", style=plot.style_circles, color= wlow != wlow[1] ? na : color.purple, linewidth=2, transp=0)
+plot(wl and wclose ? wclose : na, title="Previous Week Close", style=plot.style_circles, color= wclose != wclose[1] ? na : color.purple, linewidth=2, transp=0)
+

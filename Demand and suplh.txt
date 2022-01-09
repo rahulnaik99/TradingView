@@ -1,0 +1,509 @@
+//@version=4
+
+study(title="rahul naik intra and delivery buy/sell indicator" , overlay=true)
+
+
+pivottimeframe = input(title="Timeframe", defval="D", options=["D","W","M","60"])
+dp = input(true, title="Show Pivot Ranges")
+srp = input(true, title="Show Pivot Support / Resistance Levels")
+disp_p_labels = input(true, title="Display Pivot Range Labels")
+disp_srp_labels = input(true, title="Display Pivot Support / Resistance Labels")
+dl = input(true, title="Show Previuos Day High & Low")
+disp_d_labels = input(true, title="Display Previuos Day High & Low Labels")
+wl = input(false, title="Show Weekly High/Low/Close")
+disp_w_labels = input(false, title="Display Weekly HLC Labels")
+tp = input(false, title="Show Tomorrow Pivots")
+disp_t_labels = input(false, title="Display tomorrow Labels")
+label_size = input("large", options=["normal", "large", "huge"], title="Label size")
+l_size = label_size == "normal" ? size.normal : label_size == "large" ? size.large : size.huge
+
+
+
+//Daily pivot calculation
+
+dpopen = security(syminfo.tickerid, pivottimeframe, open[1], barmerge.gaps_off, barmerge.lookahead_on)
+dphigh = security(syminfo.tickerid, pivottimeframe, high[1], barmerge.gaps_off, barmerge.lookahead_on)
+dplow = security(syminfo.tickerid, pivottimeframe, low[1], barmerge.gaps_off, barmerge.lookahead_on)
+dpclose = security(syminfo.tickerid, pivottimeframe, close[1], barmerge.gaps_off, barmerge.lookahead_on)
+dprange = dphigh - dplow
+
+// Inputs value area:
+percent_of_tpo = input(0.70)
+tf_high = high
+tf_low = low
+tf_close = close
+
+//Pivots Formula
+pivot = (dphigh + dplow + dpclose) / 3.0
+bc = (dphigh + dplow) / 2.0
+tc = (pivot - bc) + pivot
+r_1 = (2 * pivot) - dplow
+r_2 = pivot + (dphigh - dplow)
+r_3 = dphigh + 2 * (pivot - dplow)
+r_4 = r_3 + (r_2 - r_1)
+s_1 = (2 * pivot) - dphigh
+s_2 = pivot - (dphigh - dplow)
+s_3 = dplow - 2 * (dphigh - pivot)
+s_4 = s_3 - (s_1 - s_2)
+
+// Rounding levels to min tick
+nround(x) =>
+    n = round(x / syminfo.mintick) * syminfo.mintick
+
+previous_values = false
+display_value   = true
+
+
+//Pivots
+
+label_pp = disp_p_labels ? label.new(time, pivot, text=display_value ? ("P"  + " " + tostring(nround(pivot))) : "P",  xloc=xloc.bar_time, style= label.style_none, textcolor=color.blue, size= l_size) : na
+label.set_x(id=label_pp, x=label.get_x(id=label_pp) + 86400000)
+label.delete(label_pp[1])
+label_bc = disp_p_labels ? label.new(time, bc, text=display_value ? ("BC"  + " " + tostring(nround(bc))) : "BC", xloc=xloc.bar_time, style= label.style_none, textcolor=color.aqua, size= l_size) : na
+label.set_x(id=label_bc, x=label.get_x(id=label_bc) + 86400000)
+label.delete(label_bc[1])
+label_tc = disp_p_labels ? label.new(time, tc, text=display_value ? ("TC"  + " " + tostring(nround(tc))) : "TC", xloc=xloc.bar_time, style= label.style_none, textcolor=color.aqua, size= l_size) : na
+label.set_x(id=label_tc, x=label.get_x(id=label_tc) + 86400000)
+label.delete(label_tc[1])
+label_r_1 = disp_srp_labels ? label.new(time, r_1, text=display_value ? ("r_1"  + " " + tostring(nround(r_1))) : "r_1", xloc=xloc.bar_time, style= label.style_none, textcolor=color.red, size= l_size) : na
+label.set_x(id=label_r_1, x=label.get_x(id=label_r_1) + 86400000)
+label.delete(label_r_1[1])
+label_r_2 = disp_srp_labels ? label.new(time, r_2, text=display_value ? ("r_2"  + " " + tostring(nround(r_2))) : "r_2", xloc=xloc.bar_time, style= label.style_none, textcolor=color.red, size= l_size) : na
+label.set_x(id=label_r_2, x=label.get_x(id=label_r_2) + 86400000)
+label.delete(label_r_2[1])
+label_r_3 = disp_srp_labels ? label.new(time, r_3, text=display_value ? ("r_3"  + " " + tostring(nround(r_3))) : "r_3", xloc=xloc.bar_time, style= label.style_none, textcolor=color.red, size= l_size) : na
+label.set_x(id=label_r_3, x=label.get_x(id=label_r_3) + 86400000)
+label.delete(label_r_3[1])
+label_r_4 = disp_srp_labels ? label.new(time, r_4, text=display_value ? ("r_4"  + " " + tostring(nround(r_4))) : "r_4", xloc=xloc.bar_time, style= label.style_none, textcolor=color.red, size= l_size) : na
+label.set_x(id=label_r_4, x=label.get_x(id=label_r_4) + 86400000)
+label.delete(label_r_4[1])
+label_s_1 = disp_srp_labels ? label.new(time, s_1, text=display_value ? ("s_1"  + " " + tostring(nround(s_1))) : "s_1", xloc=xloc.bar_time, style= label.style_none, textcolor=color.green, size= l_size) : na
+label.set_x(id=label_s_1, x=label.get_x(id=label_s_1) + 86400000)
+label.delete(label_s_1[1])
+label_s_2 = disp_srp_labels ? label.new(time, s_2, text=display_value ? ("s_2"  + " " + tostring(nround(s_2))) : "s_2", xloc=xloc.bar_time, style= label.style_none, textcolor=color.green, size= l_size) : na
+label.set_x(id=label_s_2, x=label.get_x(id=label_s_2) + 86400000)
+label.delete(label_s_2[1])
+label_s_3 = disp_srp_labels ? label.new(time, s_3, text=display_value ? ("s_3"  + " " + tostring(nround(s_3))) : "s_3", xloc=xloc.bar_time, style= label.style_none, textcolor=color.green, size= l_size) : na
+label.set_x(id=label_s_3, x=label.get_x(id=label_s_3) + 86400000)
+label.delete(label_s_3[1])
+label_s_4 = disp_srp_labels ? label.new(time, s_4, text=display_value ? ("s_4"  + " " + tostring(nround(s_4))) : "s_4", xloc=xloc.bar_time, style= label.style_none, textcolor=color.green, size= l_size) : na
+label.set_x(id=label_s_4, x=label.get_x(id=label_s_4) + 86400000)
+label.delete(label_s_4[1])
+
+
+
+
+
+
+//Tomorrow's Pivot Calculation
+
+tpopen = security(syminfo.tickerid, pivottimeframe, open, barmerge.gaps_off, barmerge.lookahead_on)
+tphigh = security(syminfo.tickerid, pivottimeframe, high, barmerge.gaps_off, barmerge.lookahead_on)
+tplow = security(syminfo.tickerid, pivottimeframe, low, barmerge.gaps_off, barmerge.lookahead_on)
+tpclose = security(syminfo.tickerid, pivottimeframe, close, barmerge.gaps_off, barmerge.lookahead_on)
+tprange = tphigh - tplow
+
+tppivot = (tphigh + tplow + tpclose) / 3.0
+tpbc = (tphigh + tplow) / 2.0
+tptc = tppivot - tpbc + tppivot
+tpr_1 = tppivot * 2 - tplow
+tps_1 = tppivot * 2 - tphigh
+tph3 = tpclose + tprange * (1.1 / 4)
+tpl3 = tpclose - tprange * (1.1 / 4)
+
+
+// security
+dhigh = security(syminfo.tickerid, "D", high[1], lookahead=barmerge.lookahead_on)
+dlow = security(syminfo.tickerid, "D", low[1], lookahead=barmerge.lookahead_on)
+//dmid = avg(dhigh,dlow)
+dclose = security(syminfo.tickerid, "D", close[1], lookahead=barmerge.lookahead_on)
+dopen = security(syminfo.tickerid, "D", open, lookahead=barmerge.lookahead_on)
+whigh = security(syminfo.tickerid, "W", high[1], lookahead=barmerge.lookahead_on)
+wlow = security(syminfo.tickerid, "W", low[1], lookahead=barmerge.lookahead_on)
+wclose = security(syminfo.tickerid, "W", close[1], lookahead=barmerge.lookahead_on)
+
+
+
+// Label for display
+label_dh = disp_d_labels ? label.new(time, dhigh, text=display_value ? ("PDH"  + " " + tostring(nround(dhigh))) : "PDH", xloc=xloc.bar_time, style= label.style_none, textcolor=color.black, size= l_size) : na
+label.set_x(id=label_dh, x=label.get_x(id=label_dh) + 86400000)
+label.delete(label_dh[1])
+label_dl = disp_d_labels ? label.new(time, dlow, text=display_value ? ("PDL"  + " " + tostring(nround(dlow))) : "PDL", xloc=xloc.bar_time, style= label.style_none, textcolor=color.black, size= l_size) : na
+label.set_x(id=label_dl, x=label.get_x(id=label_dl) + 86400000)
+label.delete(label_dl[1])
+label_wh = disp_w_labels ? label.new(time, whigh, text=display_value ? ("wHI"  + " " + tostring(nround(whigh))) : "wHI", xloc=xloc.bar_time, style= label.style_none, textcolor=color.purple, size= l_size) : na
+label.set_x(id=label_wh, x=label.get_x(id=label_wh) + 86400000)
+label.delete(label_wh[1])
+label_wl = disp_w_labels ? label.new(time, wlow, text=display_value ? ("wLO"  + " " + tostring(nround(wlow))) : "wLO", xloc=xloc.bar_time, style= label.style_none, textcolor=color.purple, size= l_size) : na
+label.set_x(id=label_wl, x=label.get_x(id=label_wl) + 86400000)
+label.delete(label_wl[1])
+label_wc = disp_w_labels ? label.new(time, wclose, text=display_value ? ("wCL"  + " " + tostring(nround(wclose))) : "wCL", xloc=xloc.bar_time, style= label.style_none, textcolor=color.purple, size= l_size) : na
+label.set_x(id=label_wc, x=label.get_x(id=label_wc) + 86400000)
+label.delete(label_wc[1])
+
+
+
+//Tommorow Pivots plotting and labels
+plot(tp and tppivot ? tppivot : na, title="Developing Pivot", color=color.fuchsia, style=plot.style_circles, transp=0)
+plot(tp and tpbc ? tpbc : na, title="Developing BC", color=color.fuchsia, style=plot.style_circles, transp=0)
+plot(tp and tptc ? tptc : na, title="Developing TC", color=color.fuchsia, style=plot.style_circles, transp=0)
+plot(tp and tpr_1 ? tpr_1 : na, title="Developing r_1", color=color.red, style=plot.style_circles, transp=0)
+plot(tp and tps_1 ? tps_1 : na, title="Developing s_1", color=color.green, style=plot.style_cross, transp=0)
+plot(tp and tph3 ? tph3 : na, title="Developing H3", color=color.maroon, style=plot.style_circles, transp=0)
+plot(tp and tpl3 ? tpl3 : na, title="Developing L3", color=color.olive, style=plot.style_circles, transp=0)
+
+// Label for pivot
+label_tppivot = disp_t_labels ? label.new(time, tppivot, text=display_value ? ("tP"  + " " + tostring(nround(tppivot))) : "tP", xloc=xloc.bar_time, style= label.style_none, textcolor=color.fuchsia, size= l_size) : na
+label.set_x(id=label_tppivot, x=label.get_x(id=label_tppivot) + 86400000)
+label.delete(label_tppivot[1])
+label_tptc = disp_t_labels ? label.new(time, tptc, text=display_value ? ("tTC"  + " " + tostring(nround(tptc))) : "tTC", xloc=xloc.bar_time, style= label.style_none, textcolor=color.fuchsia, size= l_size) : na
+label.set_x(id=label_tptc, x=label.get_x(id=label_tptc) + 86400000)
+label.delete(label_tptc[1])
+label_tpbc = disp_t_labels ? label.new(time, tpbc, text=display_value ? ("tBC"  + " " + tostring(nround(tpbc))) : "tBC", xloc=xloc.bar_time, style= label.style_none, textcolor=color.fuchsia, size= l_size) : na
+label.set_x(id=label_tpbc, x=label.get_x(id=label_tpbc) + 86400000)
+label.delete(label_tpbc[1])
+label_tpr_1 = disp_t_labels ? label.new(time, tpr_1, text=display_value ? ("tr_1"  + " " + tostring(nround(tpr_1))) : "tr_1", xloc=xloc.bar_time, style= label.style_none, textcolor=color.red, size= l_size) : na
+label.set_x(id=label_tpr_1, x=label.get_x(id=label_tpr_1) + 86400000)
+label.delete(label_tpr_1[1])
+label_tps_1 = disp_t_labels ? label.new(time, tps_1, text=display_value ? ("ts_1"  + " " + tostring(nround(tps_1))) : "ts_1", xloc=xloc.bar_time, style= label.style_none, textcolor=color.green, size= l_size) : na
+label.set_x(id=label_tps_1, x=label.get_x(id=label_tps_1) + 86400000)
+label.delete(label_tps_1[1])
+label_tph3 = disp_t_labels ? label.new(time, tph3, text=display_value ? ("tH3"  + " " + tostring(nround(tph3))) : "tH3", xloc=xloc.bar_time, style= label.style_none, textcolor=color.maroon, size= l_size) : na
+label.set_x(id=label_tph3, x=label.get_x(id=label_tph3) + 86400000)
+label.delete(label_tph3[1])
+label_tpl3 = disp_t_labels ? label.new(time, tpl3, text=display_value ? ("tL3"  + " " + tostring(nround(tpl3))) : "tL3", xloc=xloc.bar_time, style= label.style_none, textcolor=color.olive, size= l_size) : na
+label.set_x(id=label_tpl3, x=label.get_x(id=label_tpl3) + 86400000)
+label.delete(label_tpl3[1])
+
+// Values for Default
+bull_color = #77dd77
+bear_color = #ff6961
+shape_style_up = shape.labelup
+shape_style_down = shape.labeldown
+shape_transp = 33
+shape_size = size.tiny
+
+
+
+
+//  Bars since session started:
+session_bar_counter = bar_index - valuewhen(change(time(pivottimeframe)) != 0, bar_index, 0)
+//plot(session_bar_counter)
+//  ||--    session high, low, range:
+session_high = tf_high
+session_low = tf_low
+session_range = tf_high - tf_low
+
+session_high := nz(session_high[1], tf_high)
+session_low := nz(session_low[1], tf_low)
+session_range := nz(session_high - session_low, 0.0)
+
+//  recalculate session high, low and range:
+if session_bar_counter == 0
+    session_high := tf_high
+    session_low := tf_low
+    session_range := tf_high - tf_low
+    session_range
+if tf_high > session_high[1]
+    session_high := tf_high
+    session_range := session_high - session_low
+    session_range
+if tf_low < session_low[1]
+    session_low := tf_low
+    session_range := session_high - session_low
+    session_range
+
+//  define tpo section range:
+tpo_section_range = session_range / 20
+//  ||--    function to get the frequency a specified range is visited:
+f_frequency_of_range(_src, _upper_range, _lower_range, _length) =>
+    _adjusted_length = _length < 1 ? 1 : _length
+    _frequency = 0
+    for _i = 0 to _adjusted_length - 1 by 1
+        if _src[_i] >= _lower_range and _src[_i] < _upper_range
+            _frequency := _frequency + 1
+            _frequency
+    _return = nz(_frequency, 0)  // _adjusted_length
+    _return
+//  frequency the tpo range is visited:
+tpo_00 = f_frequency_of_range(tf_close, session_high, session_high - tpo_section_range * 1, session_bar_counter)
+tpo_01 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 1, session_high - tpo_section_range * 2, session_bar_counter)
+tpo_02 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 2, session_high - tpo_section_range * 3, session_bar_counter)
+tpo_03 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 3, session_high - tpo_section_range * 4, session_bar_counter)
+tpo_04 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 4, session_high - tpo_section_range * 5, session_bar_counter)
+tpo_05 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 5, session_high - tpo_section_range * 6, session_bar_counter)
+tpo_06 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 6, session_high - tpo_section_range * 7, session_bar_counter)
+tpo_07 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 7, session_high - tpo_section_range * 8, session_bar_counter)
+tpo_08 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 8, session_high - tpo_section_range * 9, session_bar_counter)
+tpo_09 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 9, session_high - tpo_section_range * 10, session_bar_counter)
+tpo_10 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 10, session_high - tpo_section_range * 11, session_bar_counter)
+tpo_11 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 11, session_high - tpo_section_range * 12, session_bar_counter)
+tpo_12 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 12, session_high - tpo_section_range * 13, session_bar_counter)
+tpo_13 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 13, session_high - tpo_section_range * 14, session_bar_counter)
+tpo_14 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 14, session_high - tpo_section_range * 15, session_bar_counter)
+tpo_15 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 15, session_high - tpo_section_range * 16, session_bar_counter)
+tpo_16 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 16, session_high - tpo_section_range * 17, session_bar_counter)
+tpo_17 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 17, session_high - tpo_section_range * 18, session_bar_counter)
+tpo_18 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 18, session_high - tpo_section_range * 19, session_bar_counter)
+tpo_19 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 19, session_high - tpo_section_range * 20, session_bar_counter)
+tpo_20 = f_frequency_of_range(tf_close, session_high - tpo_section_range * 20, session_high - tpo_section_range * 21, session_bar_counter)
+
+// function to retrieve a specific tpo value
+f_get_tpo_count_1(_value) =>
+    _return = 0.0
+    if _value == 0
+        _return := tpo_00
+        _return
+    if _value == 1
+        _return := tpo_01
+        _return
+    if _value == 2
+        _return := tpo_02
+        _return
+    if _value == 3
+        _return := tpo_03
+        _return
+    if _value == 4
+        _return := tpo_04
+        _return
+    if _value == 5
+        _return := tpo_05
+        _return
+    if _value == 6
+        _return := tpo_06
+        _return
+    if _value == 7
+        _return := tpo_07
+        _return
+    if _value == 8
+        _return := tpo_08
+        _return
+    if _value == 9
+        _return := tpo_09
+        _return
+    if _value == 10
+        _return := tpo_10
+        _return
+    if _value == 11
+        _return := tpo_11
+        _return
+    if _value == 12
+        _return := tpo_12
+        _return
+    if _value == 13
+        _return := tpo_13
+        _return
+    if _value == 14
+        _return := tpo_14
+        _return
+    if _value == 15
+        _return := tpo_15
+        _return
+    if _value == 16
+        _return := tpo_16
+        _return
+    if _value == 17
+        _return := tpo_17
+        _return
+    if _value == 18
+        _return := tpo_18
+        _return
+    if _value == 19
+        _return := tpo_19
+        _return
+    if _value == 20
+        _return := tpo_20
+        _return
+    _return
+f_get_tpo_count_2(_value) =>
+    _return = 0.0
+    if _value == 0
+        _return := tpo_00
+        _return
+    if _value == 1
+        _return := tpo_01
+        _return
+    if _value == 2
+        _return := tpo_02
+        _return
+    if _value == 3
+        _return := tpo_03
+        _return
+    if _value == 4
+        _return := tpo_04
+        _return
+    if _value == 5
+        _return := tpo_05
+        _return
+    if _value == 6
+        _return := tpo_06
+        _return
+    if _value == 7
+        _return := tpo_07
+        _return
+    if _value == 8
+        _return := tpo_08
+        _return
+    if _value == 9
+        _return := tpo_09
+        _return
+    if _value == 10
+        _return := tpo_10
+        _return
+    if _value == 11
+        _return := tpo_11
+        _return
+    if _value == 12
+        _return := tpo_12
+        _return
+    if _value == 13
+        _return := tpo_13
+        _return
+    if _value == 14
+        _return := tpo_14
+        _return
+    if _value == 15
+        _return := tpo_15
+        _return
+    if _value == 16
+        _return := tpo_16
+        _return
+    if _value == 17
+        _return := tpo_17
+        _return
+    if _value == 18
+        _return := tpo_18
+        _return
+    if _value == 19
+        _return := tpo_19
+        _return
+    if _value == 20
+        _return := tpo_20
+        _return
+    _return
+
+tpo_sum = 0.0
+current_poc_position = 0.0
+current_poc_value = 0.0
+for _i = 0 to 20 by 1
+    _get_tpo_value = f_get_tpo_count_1(_i)
+    tpo_sum := tpo_sum + _get_tpo_value
+    if _get_tpo_value >= current_poc_value
+        current_poc_position := _i
+        current_poc_value := _get_tpo_value
+        current_poc_value
+poc_upper = session_high - tpo_section_range * current_poc_position
+poc_lower = session_high - tpo_section_range * (current_poc_position + 1)
+
+//  Get value area high/low
+vah_position = current_poc_position
+val_position = current_poc_position
+current_sum = current_poc_value
+
+for _i = 0 to 20 by 1
+    if current_sum < tpo_sum * percent_of_tpo
+        vah_position := max(0, vah_position - 1)
+        current_sum := current_sum + f_get_tpo_count_2(round(vah_position))
+        current_sum
+    if current_sum < tpo_sum * percent_of_tpo
+        val_position := min(20, val_position + 1)
+        current_sum := current_sum + f_get_tpo_count_2(round(val_position))
+        current_sum
+
+vah_value = session_high - tpo_section_range * vah_position
+val_value = session_high - tpo_section_range * (val_position + 1)
+
+
+f_gapper(_return_value) =>
+    _return = _return_value
+    if session_bar_counter == 0
+        _return := na
+        _return
+    _return
+
+
+///precios  candle///
+
+D_High = security(syminfo.tickerid, '15', high[1])
+D_Low = security(syminfo.tickerid, '15', low[1])
+D_Close = security(syminfo.tickerid, '15', close[1])
+D_Open = security(syminfo.tickerid, '15', open[1])
+D_Close_current = security(syminfo.tickerid, '15', close[0])
+D_Close_2 = security(syminfo.tickerid, '15', close[2])
+
+
+
+m1 = input(13, minval=1)
+m2 = input(50, minval=1)
+m3 = input(200, minval=1)
+m4 = input(1, minval=1)
+
+src = input(close, title="Source")
+
+media_1 = ema(src, m1)
+media_2 = ema(src, m2)
+media_3 = ema(src, m3)
+media_4 = ema(src, m4)
+
+m200 = media_3
+m50 = media_2
+m13 = media_1
+m01 = media_4
+
+plot(media_1, color=color.green)
+plot(media_2, color=color.red)
+plot(media_3, color=color.blue)
+
+test_1 = media_2 + 1
+test_2 = media_1 + 1
+
+//case 1//
+
+longCondition_1 = (D_Close_2 < m200 and D_Close > m200 and D_Close_current > D_Close) == 1
+shortCondition_1 = (D_Close_2 > m200 and D_Close < m200 and D_Close_current < D_Close) == 1
+
+plotshape(longCondition_1, title="Buy Signal", text="BUY 200 EMA", textcolor=color.white, style=shape.labelup, size=size.normal, location=location.belowbar, color=color.green, transp=0)
+plotshape(shortCondition_1, title="Sell Signal", text="SELL 200 EMA", textcolor=color.white, style=shape.labeldown, size=size.normal, location=location.abovebar, color=color.red, transp=0)
+
+alertcondition(longCondition_1, title="Buy Alert", message="STRONG BUY")
+alertcondition(shortCondition_1, title="Sell Alert", message="STRONG SELL")
+
+//case 2//
+
+longCondition_2 = (D_Close_2 < m50 and D_Close > m50 and
+   D_Close_current > D_Close and D_Close_current > m50 and D_Close_current > r_1 and
+   D_Close_current < r_1 + (r_2 - r_1) * 25 / 100) == 1
+shortCondition_2 = (D_Close_2 > m50 and D_Close < m50 and
+   D_Close_current < D_Close and D_Close_current < m50 and D_Close_current < r_1 and
+   D_Close_current > r_1 + (r_2 - r_1) * 25 / 100) == 1
+
+plotshape(longCondition_2, title="Buy Signal", text="BUY 50 EMA", textcolor=color.white, style=shape.labelup, size=size.normal, location=location.belowbar, color=color.green, transp=0)
+plotshape(shortCondition_2, title="Sell Signal", text="SELL 50 EMA", textcolor=color.white, style=shape.labeldown, size=size.normal, location=location.abovebar, color=color.red, transp=0)
+
+alertcondition(longCondition_2, title="Buy Alert", message="STRONG BUY")
+alertcondition(shortCondition_2, title="Sell Alert", message="STRONG SELL")
+
+
+//case 3 //
+
+longCondition_3 = (D_Close > m13 and m13 > m50 and m50 > m200 and D_Close_current > D_Close and
+   D_Close > D_Close_2 and D_Close_2 < m13 and D_Close_current > m13) == 1
+shortCondition_3 = (D_Close < m13 and m13 < m50 and m50 < m200 and D_Close_current < D_Close and
+   D_Close < D_Close_2 and D_Close_2 > m13 and D_Close_current < m13) == 1
+
+
+//plotshape(longCondition_3, title="Buy Signal", text="STRONG BUY", textcolor=color.white, style=shape.labelup, size=size.normal, location=location.belowbar, color=color.green, transp=0)
+//plotshape(shortCondition_3, title="Sell Signal", text="STRONG SELL", textcolor=color.white, style=shape.labeldown, size=size.normal, location=location.abovebar, color=color.red, transp=0)
+
+//alertcondition(longCondition_3, title="Buy Alert", message="STRONG BUY")
+//alertcondition(shortCondition_3, title="Sell Alert", message="STRONG SELL")
+
+//case 4//
+
+//longCondition_4 = (D_Close < m50 and D_Close_current > m50) == 1
+//shortCondition_4 = (D_Close > m50 and D_Close_current < m50) == 1
+
+//plotshape(longCondition_4, title="Buy Signal", text="BUY 50 EMA", textcolor=color.white, style=shape.labelup, size=size.normal, location=location.belowbar, color=color.yellow, transp=0)
+//plotshape(shortCondition_4, title="Sell Signal", text="SELL 50 EMA", textcolor=color.white, style=shape.labeldown, size=size.normal, location=location.abovebar, color=color.yellow, transp=0)
+//alertcondition(longCondition_4, title="Buy Alert", message="STRONG BUY")
+//alertcondition(shortCondition_4, title="Sell Alert", message="STRONG SELL")
